@@ -27,7 +27,8 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid email format. Please provide a valid email.");
         }
         try {
-            userService.registerUser(email, password);
+            User user=userService.registerUser(email, password);
+            userService.publishMessageToRabbit(user);
             return ResponseEntity.ok("User registered successfully!");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

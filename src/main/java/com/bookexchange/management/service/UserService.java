@@ -2,6 +2,7 @@ package com.bookexchange.management.service;
 
 import com.bookexchange.management.dto.LoginResponseDTO;
 import com.bookexchange.management.entity.User;
+import com.bookexchange.management.rabbitmq.UserPublisher;
 import com.bookexchange.management.repository.UserRepository;
 import com.bookexchange.management.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
    @Autowired
     JwtUtil jwtUtil;
+   @Autowired
+    UserPublisher userPublisher;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -35,6 +38,10 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public void publishMessageToRabbit(User user)
+    {
+        userPublisher.sendUserMessage(user.getId(),user.getEmail());
+    }
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
