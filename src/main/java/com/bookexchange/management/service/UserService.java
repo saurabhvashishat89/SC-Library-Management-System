@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +39,24 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User registerUser(String email, String password,User user) {
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            throw new RuntimeException("Email already registered!");
+        }
+        User saveUser = new User();
+        saveUser.setFirstName(user.getFirstName());
+        saveUser.setLastName(user.getLastName());
+        saveUser.setEmail(email);
+        saveUser.setPassword(passwordEncoder.encode(password));
+        return userRepository.save(saveUser);
+    }
+
+    public List<User> getUsers() {
+        List<User> existingUser = userRepository.findAll();
+
+        return existingUser;
+    }
     public void publishMessageToRabbit(User user)
     {
         userPublisher.sendUserMessage(user.getId(),user.getEmail());

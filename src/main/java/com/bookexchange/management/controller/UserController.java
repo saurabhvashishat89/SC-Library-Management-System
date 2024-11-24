@@ -6,6 +6,7 @@ import com.bookexchange.management.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 @RestController
@@ -17,7 +18,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
+    @PostMapping("/registerWithOutName")
     public ResponseEntity<String> registerUser(@RequestHeader String email, @RequestHeader String password) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
         Pattern pattern = Pattern.compile(emailRegex);
@@ -35,6 +36,38 @@ public class UserController {
         }
     }
 
+
+    @PostMapping("/register")
+    public ResponseEntity<String> registerUser(@RequestBody User user) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+String email = user.getEmail();
+String password = user.getPassword();
+        // Validate email
+        if (!pattern.matcher(email).matches()) {
+            return ResponseEntity.badRequest().body("Invalid email format. Please provide a valid email.");
+        }
+        try {
+            User getUser=userService.registerUser(email, password,user);
+            userService.publishMessageToRabbit(getUser);
+            return ResponseEntity.ok("User registered successfully!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
+    @GetMapping()
+    public List<User> getUsers() throws Exception {
+
+        try {
+            List<User> getUser=userService.getUsers();
+
+            return  getUser;
+        } catch (RuntimeException e) {
+            throw new Exception("exception occurred while fetching the details");
+        }
+    }
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestHeader String email, @RequestHeader String newPassword, @RequestHeader String oldPassword) {
         try {
